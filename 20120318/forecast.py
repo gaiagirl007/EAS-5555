@@ -12,10 +12,12 @@ ncfile = Dataset("wrfout_d01_2012-03-18_00:00:00")
 # Lots of code borrowed from the wrf python tutorial
 
 # Get temperature in C
-temps = getvar(ncfile, "tc", timeidx=0)
-     
+temps = getvar(ncfile, "tc")
+print(np.shape(to_np(temps)))
+
 # Get the latitude and longitude points
 lats, lons = latlon_coords(temps)
+lat_np, lon_np = to_np(lats), to_np(lons)
 
 # Get the cartopy mapping object
 cart_proj = get_cartopy(temps)
@@ -24,9 +26,10 @@ cart_proj = get_cartopy(temps)
 hour = 0
 
 for t in temps:
-    # smooth
-    smooth_t = smooth2d(t, 3, cenweight=4)
-
+    
+    smooth_t = smooth2d(t, 3, cenweight = 4)
+    t_np = to_np(smooth_t)
+    
     # Create a figure
     fig = plt.figure(figsize=(12,6))
     # Set the GeoAxes to the projection used by WRF
@@ -39,7 +42,7 @@ for t in temps:
     ax.coastlines('50m', linewidth=0.8)
 
     # Make the contours for temp
-    plt.contourf(to_np(lons), to_np(lats), to_np(smooth_t), 10,
+    plt.contourf(lon_np, lat_np, t_np, 10,
         transform=crs.PlateCarree(), cmap=get_cmap("jet"))
 
     # Add a color bar
@@ -52,13 +55,15 @@ for t in temps:
     # Add the gridlines
     ax.gridlines(color="black", linestyle="dotted")
     date = "2021-04-07T00:00:00"
-    time = date + "+" + str(hour) + " hours"
+    time = date + "+" + str(hour)
     plt.title("Temperature (C), " + time)
     
     strhr = str(hour) if hour > 9 else "0" + str(hour)
     plt.savefig("d01T" + strhr + ".png")
     plt.close()
-    hour += 3
+    hour += 1
+
+
 
 #if __name__ == "__main__":
     # Open the NetCDF file
